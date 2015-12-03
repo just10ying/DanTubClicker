@@ -1,0 +1,72 @@
+html {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	font-family: 'Roboto', sans-serif;
+	height: 100%;
+	width: 100%;
+}
+
+/* --------------------SCAFFOLDING CSS------------------------- */
+
+.unselectable {
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-o-user-select: none;
+	user-select: none;
+	cursor: default;
+}
+
+.flex.row {
+	display: flex;
+	flex-direction: row;
+}
+
+.flex.col {
+	display: flex;
+	flex-direction: column;
+}
+
+.flex.grow {
+	flex: 1 1 auto;
+}
+
+.flex.static {
+	flex: 0 0 auto;
+}
+
+.x-align.col,
+.y-align.row {
+	align-items: center;
+}
+
+
+.x-align.row,
+.y-align.col {
+	justify-content: center;
+}
+
+.std-margin {
+	margin: 5px;
+}
+
+.std-padding {
+	padding: 5px;
+}
+
+/* STANDARD STYLING */
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+ 
+::-webkit-scrollbar-track {
+	background: #eeeeee;
+}
+ 
+::-webkit-scrollbar-thumb {
+	background: #aaaaaa;
+}

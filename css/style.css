@@ -1,0 +1,56 @@
+#dantub-face {
+	margin: 0 auto;
+	cursor: pointer;
+}
+
+#gps,
+#ggs-total {
+	font-size: 1.5em;
+	text-align: center;
+}
+
+/* on desktop */
+@media screen and (min-width: 992px) {
+	.main-container {
+		padding: 15px;
+		height: 100%;
+	}
+	
+	#clicker-container {
+		flex: 0 0 400px;
+	}
+	
+	#chat-container {
+		flex: 1 1 auto;
+		min-height: 350px;
+		
+		border-top: 1px solid #aaa;
+		padding-top: 5px;
+	}
+	
+	#messages-container {
+		flex: 1 1 auto;
+		overflow: auto;
+	}
+}
+
+#chat-title {
+	text-align: center;
+}
+
+#messages-container .label.label-clear {
+	color: #333;
+	padding-left: 0;
+}
+
+.page-header > h1 {
+	font-size: 500%;
+}
+
+.page-header > .subtext {
+	font-size: 150%;
+}
+
+#tab-content-container {
+	padding-top: 10px;
+}
