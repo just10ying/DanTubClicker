@@ -3,6 +3,7 @@ var CONSTANTS = {
 	HttpPort: 8081,
 	WebSocketsPort: 8082,
 	MongoDbURL: 'mongodb://localhost:27017/dantub',
+	ConnectedClientsURL: '/server/connected_clients',
 	UserDataURL: '/server/user_data',
 	UserDataCollection: 'user_data',
 	ID: '_id'
@@ -68,21 +69,18 @@ app.put(CONSTANTS.UserDataURL, function(req, res) {
 	res.send();
 });
 
-app.listen(CONSTANTS.HttpPort);
-
 // ------------------------ Init DBConnection ------------------------ //
 
 var dbGlobal = null;
 
 MongoClient.connect(CONSTANTS.MongoDbURL, function(err, db) {
 	assert.equal(null, err);
-	console.log("[INFO] Connected to database");
 	dbGlobal = db;
 });
 
 process.on("SIGINT", function() {
-	console.log("[INFO] Shutting down DanTub Clicker server");
 	dbGlobal.close();
+	console.log("[INFO] Shutting down DanTub Clicker server");
 	process.exit();
 });
 
@@ -90,22 +88,43 @@ process.on("SIGINT", function() {
 server.listen(CONSTANTS.WebSocketsPort);
 
 var EVENTS = {
-	Connect : 'gg',
-	Message : 'jahnlee'
+	SocketIOConnect : 'connect',
+	SocketIODisconnect : 'disconnect',
+	Connect : 'fb_connect',
+	Message : 'chat_message'
 };
 
+var clients = {}; // Hashtable of clients
+
 io.on('connection', function(socket) {
+	clients[socket.id] = {alias: null}; // By default, alias is null.
+
+	socket.on(EVENTS.SocketIODisconnect, function(data) {
+		delete clients[socket.id];
+	});
+	
 	socket.on(EVENTS.Connect, function(data) {
+		clients[socket.id].alias = data; // Set socket name
+		
 		io.sockets.emit(EVENTS.Message, {
-			type: 'connect',
-			content: data + ' is online.'
+			type: EVENTS.Connect,
+			content: data + ' signed in.'
 		});
 	});
 	socket.on(EVENTS.Message, function(data) {
 		io.sockets.emit(EVENTS.Message, {
-			type: 'chat',
+			type: EVENTS.Message,
 			alias: data.alias,
 			content: data.content
 		});
 	});
 });
+
+app.get(CONSTANTS.ConnectedClientsURL, function(req, res) {
+	res.send(clients);	
+});
+
+// ------------------------ Start webserver ------------------------ //
+
+app.listen(CONSTANTS.HttpPort);
+console.log("[INFO] Server online");

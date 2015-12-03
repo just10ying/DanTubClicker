@@ -20,12 +20,12 @@ body {
 	cursor: default;
 }
 
-.flex.row {
+.flex.flex-row {
 	display: flex;
 	flex-direction: row;
 }
 
-.flex.col {
+.flex.flex-col {
 	display: flex;
 	flex-direction: column;
 }

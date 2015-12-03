@@ -28,7 +28,7 @@
 		padding-top: 5px;
 	}
 	
-	#messages-container {
+	.messages-container {
 		flex: 1 1 auto;
 		overflow: auto;
 	}
@@ -36,6 +36,15 @@
 
 #chat-title {
 	text-align: center;
+}
+
+#chat-toolbar {
+	display: flex;
+	flex-direction: row;
+}
+
+#chat-toolbar-buttons {
+	align-items: center;
 }
 
 #messages-container .label.label-clear {

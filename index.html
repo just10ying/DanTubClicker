@@ -18,25 +18,35 @@
 	<script src="user_data_service.js"></script>
 	<script src="index.js"></script>
 
-	<div id="main-left" class="col-md-3 main-container flex col static">
+	<div id="main-left" class="col-md-3 main-container flex flex-col static">
 		<div ng-controller="ClickerController" id="clicker-container">
 			<img ng-click="awardClickGgs()" id="dantub-face" class="center-block" src="resources/dantub.jpg">
 			<div id="gps">GPS: {{data.gps}}</div>
 			<div id="ggs-total">GGs: {{data.ggs}}</div>
 		</div>
-		<div ng-controller="ChatController" id="chat-container" class="flex col">
-			<span ng-controller="FacebookController">
+		<div ng-controller="ChatController" id="chat-container" class="flex flex-col">
+			<div ng-controller="FacebookController" id="chat-toolbar">
+				<div id="chat-toolbar-buttons" class="btn-group btn-group-xs flex flex-row grow" role="group">
+					<button ng-click="setChatMode(CHATMODES.Chat)" ng-class="{'btn-success': connected, 'btn-danger': !connected}" type="button" class="btn btn-default">Chat Status: {{connected ? 'Online' : 'Offline'}}</button>
+					<button ng-click="setChatMode(CHATMODES.ClientInfo)" type="button" class="btn btn-default">Online Users</button>
+				</div>
 				<facebook-login-button></facebook-login-button>
-			</span>
-			<div id="messages-container" scroll-glue>
+			</div>
+			<div ng-show="chatMode == CHATMODES.Chat" class="messages-container" scroll-glue>
 				<div ng-repeat="message in messages track by $index">
-					<div ng-if="message.type == 'connect'">
+					<div ng-if="message.type == EVENTS.Connect">
 						<span class="label label-success">{{message.content}}</span>
 					</div>
-					<div ng-if="message.type == 'chat'">
+					<div ng-if="message.type == EVENTS.Message">
 						<span class="label label-info">{{message.alias}}</span>
 						<span class="label label-clear">{{message.content}}</span>
 					</div>
+				</div>
+			</div>
+			<div ng-show="chatMode == CHATMODES.ClientInfo" class="messages-container">
+				<div>Users online: {{numConnectedUsers}}</div>
+				<div ng-repeat="alias in connectedUsers">
+					{{alias}}
 				</div>
 			</div>
 			<div class="input-group">

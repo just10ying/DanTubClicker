@@ -7,7 +7,6 @@ app.controller('ClickerController', function($scope, $rootScope, $interval, User
 	var UPDATES_PER_SECOND = 5;
 	
 	$scope.data = UserData;
-	
 	$scope.awardClickGgs = function() {
 		$scope.data.ggs += $scope.data.ggClickBase * $scope.data.ggClickMultiplier;
 	}
@@ -52,21 +51,61 @@ app.controller('FacebookController', function($scope, $rootScope, $interval, $ht
 	});
 });
 
-app.controller('ChatController', function($scope, $rootScope) {
+app.controller('ChatController', function($scope, $rootScope, $http, $interval) {
 	var SOCKET_ADDR = 'http://ggjohnlee.com:8082';
+	var CONNECTED_CLIENTS_URL = '/server/connected_clients'; 
 	var DEFAULT_ALIAS = 'Guest';
-	var EVENTS = {
-		Connect : 'gg',
-		Message : 'jahnlee'
+	var UPDATE_USER_INFO_MS = 5000;
+	$scope.EVENTS = {
+		SocketIOConnect : 'connect',
+		SocketIODisconnect : 'disconnect',
+		Connect : 'fb_connect',
+		Message : 'chat_message'
 	};
 	
 	$scope.messages = [];
 	$scope.localMessageContent = '';
 	$scope.alias = DEFAULT_ALIAS;
+	$scope.connected = false;
+	$scope.connectedUsers = [];
+	$scope.numConnectedUsers = 0;
+	
+	$scope.CHATMODES = {
+		Chat : 'chat',
+		ClientInfo : 'client_info'
+	};
+	$scope.chatMode = $scope.CHATMODES.Chat;
+	var updateConnectedUserInfo = function() {
+		$http.get(CONNECTED_CLIENTS_URL).
+		success(function(data, status, headers, config) {
+			$scope.connectedUsers = [];
+			$scope.numConnectedUsers = 0;
+			for (key in data) {
+				$scope.numConnectedUsers++;
+				if (data[key].alias != null) {
+					$scope.connectedUsers.push(data[key].alias);
+				}
+			}
+		});
+	};
+	var userUpdatePromise = null;
+	$scope.setChatMode = function(mode) {
+		$scope.chatMode = mode;
+		if (mode == $scope.CHATMODES.ClientInfo) {
+			updateConnectedUserInfo();
+			userUpdatePromise = $interval(updateConnectedUserInfo, UPDATE_USER_INFO_MS);
+		}
+		else {
+			if (userUpdatePromise != null) {
+				$interval.cancel(userUpdatePromise);
+			}
+		}
+	};
+	
 	
 	$scope.sendChatMessage = function($event) {
 		if ($event == null || $event.charCode == 13) {
-			socket.emit(EVENTS.Message, {
+			socket.emit($scope.EVENTS.Message, {
 				alias: $scope.alias,
 				content: $scope.localMessageContent
 			});
@@ -75,14 +114,17 @@ app.controller('ChatController', function($scope, $rootScope) {
 	};
 	
 	var socket = io.connect(SOCKET_ADDR);	
-	socket.on(EVENTS.Message, function(data) {
+	socket.on($scope.EVENTS.SocketIOConnect, function() {
+		$scope.connected = true;
+	});
+	socket.on($scope.EVENTS.Message, function(data) {
 		$scope.messages.push(data);
 	});
 	
 	$rootScope.$on('fbLoginSuccess', function(name, response) {
 		FB.api('/me', function(response) {
 			$scope.alias = response.name;
-			socket.emit(EVENTS.Connect, response.name);
+			socket.emit($scope.EVENTS.Connect, response.name);
 		});
 	});
 });
