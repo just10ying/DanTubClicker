@@ -11,6 +11,7 @@
 	<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
     <script src="https://cdn.socket.io/socket.io-1.3.7.js"></script>
+	<script src="node/const.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.8/angular.js"></script>
 	<script src="bower_components/angular-route/angular-route.js"></script>
 	<script src="bower_components/angular-scroll-glue/src/scrollglue.js"></script>
@@ -20,32 +21,34 @@
 
 	<div id="main-left" class="col-md-3 main-container flex flex-col static">
 		<div ng-controller="ClickerController" id="clicker-container">
-			<img ng-click="awardClickGgs()" id="dantub-face" class="center-block" src="resources/dantub.jpg">
-			<div id="gps">GPS: {{data.gps}}</div>
-			<div id="ggs-total">GGs: {{data.ggs}}</div>
+			<img ng-click="addClickGgs()" id="dantub-face" class="center-block" src="resources/dantub.jpg">
+			<div id="gps">GPS: {{gps()}}</div>
+			<div id="ggs-total">GGs: {{numGgs()}}</div>
 		</div>
 		<div ng-controller="ChatController" id="chat-container" class="flex flex-col">
 			<div ng-controller="FacebookController" id="chat-toolbar">
 				<div id="chat-toolbar-buttons" class="btn-group btn-group-xs flex flex-row grow" role="group">
-					<button ng-click="setChatMode(CHATMODES.Chat)" ng-class="{'btn-success': connected, 'btn-danger': !connected}" type="button" class="btn btn-default">Chat Status: {{connected ? 'Online' : 'Offline'}}</button>
-					<button ng-click="setChatMode(CHATMODES.ClientInfo)" type="button" class="btn btn-default">Online Users</button>
+					<button ng-click="setChatMode(ChatModes.Chat)" ng-class="{'btn-success': connected, 'btn-danger': !connected, 'active': chatMode == ChatModes.chat}" type="button" class="btn btn-default">Chat Status: {{connected ? 'Online' : 'Offline'}}</button>
+					<button ng-click="setChatMode(ChatModes.ClientInfo)" ng-class="{'active': chatMode == ChatModes.ClientInfo}" type="button" class="btn btn-default">Online Users</button>
 				</div>
 				<facebook-login-button></facebook-login-button>
 			</div>
-			<div ng-show="chatMode == CHATMODES.Chat" class="messages-container" scroll-glue>
-				<div ng-repeat="message in messages track by $index">
-					<div ng-if="message.type == EVENTS.Connect">
+			<div ng-show="chatMode == ChatModes.Chat" class="messages-container flex flex-col" scroll-glue>
+				<div ng-repeat="message in messages track by $index" class="message-container flex flex-row">
+					<div ng-if="message.type == Events.FbConnect">
 						<span class="label label-success">{{message.content}}</span>
 					</div>
-					<div ng-if="message.type == EVENTS.Message">
-						<span class="label label-info">{{message.alias}}</span>
-						<span class="label label-clear">{{message.content}}</span>
+					<div ng-if="message.type == Events.ChatMessage" class="chat-message flex flex-row">
+						<span class="label username">{{message.alias}}</span>
+						<div class="chat-content">
+							{{message.content}}
+						</div>
 					</div>
 				</div>
 			</div>
-			<div ng-show="chatMode == CHATMODES.ClientInfo" class="messages-container">
+			<div ng-show="chatMode == ChatModes.ClientInfo" class="messages-container">
 				<div>Users online: {{numConnectedUsers}}</div>
-				<div ng-repeat="alias in connectedUsers">
+				<div ng-repeat="alias in connectedUsers track by $index">
 					{{alias}}
 				</div>
 			</div>
@@ -66,18 +69,18 @@
 			<div class="subtext">{{quote}}</div>
 		</div>
 		<ul class="nav nav-tabs">
-			<li ng-click="changeTab(tabs.home)" ng-class="{active: currentTab == tabs.home}" role="presentation"><a href="#">Home</a></li>
-			<li ng-click="changeTab(tabs.options)" ng-class="{active: currentTab == tabs.options}" role="presentation"><a href="#">Options</a></li>
-			<li ng-click="changeTab(tabs.comments)" ng-class="{active: currentTab == tabs.comments}" role="presentation"><a href="#">Comments</a></li>
+			<li ng-click="changeTab(tabs.Home)" ng-class="{active: currentTab == tabs.Home}" role="presentation"><a href="#">{{tabs.Home}}</a></li>
+			<li ng-click="changeTab(tabs.Options)" ng-class="{active: currentTab == tabs.Options}" role="presentation"><a href="#">{{tabs.Options}}</a></li>
+			<li ng-click="changeTab(tabs.Comments)" ng-class="{active: currentTab == tabs.Comments}" role="presentation"><a href="#">{{tabs.Comments}}</a></li>
 		</ul>
 		<div id="tab-content-container">
-			<div ng-if="currentTab == tabs.home">
+			<div ng-show="currentTab == tabs.Home">
 				Welcome to DanTub clicker!  Items and upgrades coming soon.
 			</div>
-			<div ng-if="currentTab == tabs.options">
+			<div ng-show="currentTab == tabs.Options">
 				Options
 			</div>
-			<div ng-if="currentTab == tabs.comments">
+			<div ng-show="currentTab == tabs.Comments">
 				Comments
 			</div>
 		</div>

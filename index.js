@@ -1,86 +1,39 @@
-var app = angular.module('dantubApp', ['UserDataService', 'facebookUtils', 'luegg.directives']);
+var app = angular.module('dantubApp', ['userDataService', 'facebookUtils', 'luegg.directives']);
 app.constant('facebookConfigSettings', {
-	'appID' : '1598147250427698'
+	'appID' : Constants.FacebookAppId,
+	'loginSuccess': 'fbLoginSuccess',
+	'logoutSuccess': 'fbLogoutSuccess'
 });
 
-app.controller('ClickerController', function($scope, $rootScope, $interval, UserData) {
-	var UPDATES_PER_SECOND = 5;
-	
-	$scope.data = UserData;
-	$scope.awardClickGgs = function() {
-		$scope.data.ggs += $scope.data.ggClickBase * $scope.data.ggClickMultiplier;
-	}
-		
-	$interval(function() {
-		$scope.data.ggs += (1 / UPDATES_PER_SECOND) * $scope.data.gps;
-	}, 1000 / UPDATES_PER_SECOND);
+app.controller('ClickerController', function($scope, userData) {
+	$scope.addClickGgs = userData.addClickGgs;
+	$scope.numGgs = userData.getGgs;
+	$scope.gps = userData.getGps;
 });
 
-app.controller('FacebookController', function($scope, $rootScope, $interval, $http, UserData) {
-	var USER_DATA_URL = "/server/user_data";
-	var GG_CONNECT_ERROR = "[Error] could not authenticate with GgJohnLee.com servers.";
-	var DATA_RETRIEVAL_ERROR = "[Error] could not retrieve user data at this time.";
-	var SAVE_SUCCESS = "[Info] Save successful";
-	var AUTOSAVE_TIMEOUT = 10000;
-	
-	var retrieveUserData = function(userID) {
-		$http.post(USER_DATA_URL, JSON.stringify({_id: userID})).
-		success(function(data, status, headers, config) {
-			UserData.ggs = data.ggs;
-		}).
-		error(function(data, status, headers, config) {
-			console.error(DATA_RETRIEVAL_ERROR);
-		});
-	};
-	
-	$interval(function() {
-		if (UserData._id != null) {
-			$http.put(USER_DATA_URL, JSON.stringify(UserData)).
-			success(function(data, status, headers, config) {
-				
-			}).
-			error(function(data, status, headers, config) {
-				console.error(GG_CONNECT_ERROR);
-			});
-		}
-	}, AUTOSAVE_TIMEOUT);
-	
-	$rootScope.$on('fbLoginSuccess', function(name, response) {
-		UserData._id = response.authResponse.userID;
-		retrieveUserData(UserData._id);
+app.controller('FacebookController', function($rootScope, userData, facebookConfigSettings) {
+	$rootScope.$on(facebookConfigSettings.loginSuccess, function(name, response) {
+		userData.loadUserData(response.authResponse.userID);
 	});
 });
 
-app.controller('ChatController', function($scope, $rootScope, $http, $interval) {
-	var SOCKET_ADDR = 'http://ggjohnlee.com:8082';
-	var CONNECTED_CLIENTS_URL = '/server/connected_clients'; 
-	var DEFAULT_ALIAS = 'Guest';
-	var UPDATE_USER_INFO_MS = 5000;
-	$scope.EVENTS = {
-		SocketIOConnect : 'connect',
-		SocketIODisconnect : 'disconnect',
-		Connect : 'fb_connect',
-		Message : 'chat_message'
-	};
-	
+app.controller('ChatController', function($scope, $rootScope, $http, $interval, facebookConfigSettings) {
+	$scope.Events = Constants.MessageEvents;
 	$scope.messages = [];
 	$scope.localMessageContent = '';
-	$scope.alias = DEFAULT_ALIAS;
+	$scope.alias = Constants.DefaultAlias;
 	$scope.connected = false;
 	$scope.connectedUsers = [];
 	$scope.numConnectedUsers = 0;
+	$scope.ChatModes = Constants.ChatModes;
+	$scope.chatMode = $scope.ChatModes.Chat;
 	
-	$scope.CHATMODES = {
-		Chat : 'chat',
-		ClientInfo : 'client_info'
-	};
-	$scope.chatMode = $scope.CHATMODES.Chat;
 	var updateConnectedUserInfo = function() {
-		$http.get(CONNECTED_CLIENTS_URL).
+		$http.get(Constants.ConnectedClientsURL).
 		success(function(data, status, headers, config) {
 			$scope.connectedUsers = [];
 			$scope.numConnectedUsers = 0;
-			for (key in data) {
+			for (var key in data) {
 				$scope.numConnectedUsers++;
 				if (data[key].alias != null) {
 					$scope.connectedUsers.push(data[key].alias);
@@ -91,9 +44,9 @@ app.controller('ChatController', function($scope, $rootScope, $http, $interval) 
 	var userUpdatePromise = null;
 	$scope.setChatMode = function(mode) {
 		$scope.chatMode = mode;
-		if (mode == $scope.CHATMODES.ClientInfo) {
+		if (mode == $scope.ChatModes.ClientInfo) {
 			updateConnectedUserInfo();
-			userUpdatePromise = $interval(updateConnectedUserInfo, UPDATE_USER_INFO_MS);
+			userUpdatePromise = $interval(updateConnectedUserInfo, Constants.UserInfoRefreshInterval);
 		}
 		else {
 			if (userUpdatePromise != null) {
@@ -101,11 +54,11 @@ app.controller('ChatController', function($scope, $rootScope, $http, $interval) 
 			}
 		}
 	};
-	
+	$scope.setChatMode($scope.ChatModes.Chat);
 	
 	$scope.sendChatMessage = function($event) {
 		if ($event == null || $event.charCode == 13) {
-			socket.emit($scope.EVENTS.Message, {
+			socket.emit($scope.Events.ChatMessage, {
 				alias: $scope.alias,
 				content: $scope.localMessageContent
 			});
@@ -113,54 +66,40 @@ app.controller('ChatController', function($scope, $rootScope, $http, $interval) 
 		}
 	};
 	
-	var socket = io.connect(SOCKET_ADDR);	
-	socket.on($scope.EVENTS.SocketIOConnect, function() {
+	var socket = io.connect(':' + Constants.WebsocketPort);	
+	socket.on($scope.Events.SocketIOConnect, function() {
 		$scope.connected = true;
 	});
-	socket.on($scope.EVENTS.Message, function(data) {
+	socket.on($scope.Events.ChatMessage, function(data) {
 		$scope.messages.push(data);
 	});
 	
-	$rootScope.$on('fbLoginSuccess', function(name, response) {
+	$rootScope.$on(facebookConfigSettings.loginSuccess, function(name, response) {
 		FB.api('/me', function(response) {
 			$scope.alias = response.name;
-			socket.emit($scope.EVENTS.Connect, response.name);
+			socket.emit($scope.Events.FbConnect, response.name);
 		});
+	});
+	
+	$rootScope.$on(facebookConfigSettings.logoutSuccess, function() {
+		$scope.alias = Constants.DefaultAlias;
 	});
 });
 
 app.controller('QuoteController', function($scope, $interval) {
-	var QUOTE_REFRESH_TIMER = 10000;
-	var QUOTES = [
-		'"aaaaaaaaaaaahhhhhhhhhhHHHHHHHHHH" ~ John Lee',
-		'"It is I, Mayro" ~ Supra Mayro',
-		'"Guys where is my base" ~ John Lee',
-		'"Hwyyyyyyyyyyyyyyyyyyyyy" ~ John Lee',
-		'"This is the kind of fanservice I\'m opposed to" ~ John Lee',
-		'"I don\'t want no birds.  Please don\'t give me any birds" ~ John Lee',
-		'"Who could it be?  Believe it or not... it\'s JAHN LEE" ~ Joey',
-		'"YASSSSSSSSSSS BC SURPRISE" ~ Joey'
-	];
-	
-	$scope.quote = '';
-	
 	var refreshQuote = function() {
-		var index = Math.floor(Math.random() * QUOTES.length);
-		$scope.quote = QUOTES[index];
+		var index = Math.floor(Math.random() * Constants.JohnLeeQuotes.length);
+		$scope.quote = Constants.JohnLeeQuotes[index];
 	};
 	
-	$interval(refreshQuote, QUOTE_REFRESH_TIMER);
 	refreshQuote();
+	$interval(refreshQuote, Constants.QuoteRefreshInterval);
 });
 
 app.controller('CenterTabController', function($scope) {
-	$scope.tabs = {
-		home: 'home',
-		options: 'options',
-		comments: 'comments'
-	};
-	$scope.currentTab = $scope.tabs.home;
+	$scope.tabs = Constants.HomeTabNames;
 	$scope.changeTab = function(tab) {
 		$scope.currentTab = tab;
 	}
+	$scope.changeTab($scope.tabs.Home);
 });

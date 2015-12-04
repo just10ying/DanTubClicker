@@ -1,13 +1,6 @@
-// Constants
-var CONSTANTS = {
-	HttpPort: 8081,
-	WebSocketsPort: 8082,
-	MongoDbURL: 'mongodb://localhost:27017/dantub',
-	ConnectedClientsURL: '/server/connected_clients',
-	UserDataURL: '/server/user_data',
-	UserDataCollection: 'user_data',
-	ID: '_id'
-};
+// Load constants
+var Constants = require('./const.js');
+console.log(Constants.ServerConstantLoadComplete);
 
 // Mongodb dependencies
 var MongoClient = require('mongodb').MongoClient;
@@ -35,10 +28,10 @@ app.use(function (req, res, next) {
 	next();
 });
 
-app.post(CONSTANTS.UserDataURL, function(req, res) {
+app.post(Constants.UserDataURL, function(req, res) {
 	assert.notEqual(dbGlobal, null);
 	
-	dbGlobal.collection(CONSTANTS.UserDataCollection).findOne({'_id' : '' + req.body._id}, function(err, result) {
+	dbGlobal.collection(Constants.MongoUserDataCollection).findOne({'_id' : '' + req.body._id}, function(err, result) {
 		if (result) {
 			res.send(JSON.stringify(result));
 		}
@@ -46,19 +39,19 @@ app.post(CONSTANTS.UserDataURL, function(req, res) {
 	
 });
 
-app.put(CONSTANTS.UserDataURL, function(req, res) {
+app.put(Constants.UserDataURL, function(req, res) {
 	assert.notEqual(dbGlobal, null);
 		
-	var cursor = dbGlobal.collection(CONSTANTS.UserDataCollection).find({'_id' : req.body._id});
+	var cursor = dbGlobal.collection(Constants.MongoUserDataCollection).find({'_id' : req.body._id});
 	cursor.count(false, function(err, count) {
 		if (count == 0) {
-			dbGlobal.collection(CONSTANTS.UserDataCollection).insertOne(req.body,
+			dbGlobal.collection(Constants.MongoUserDataCollection).insertOne(req.body,
 				function(err, results) {
 					assert.equal(err, null);
 			});
 		}
 		else {
-			dbGlobal.collection(CONSTANTS.UserDataCollection).replaceOne({'_id' : req.body._id},
+			dbGlobal.collection(Constants.MongoUserDataCollection).replaceOne({'_id' : req.body._id},
 				req.body,
 				function(err, results) {
 					assert.equal(err, null);
@@ -73,7 +66,7 @@ app.put(CONSTANTS.UserDataURL, function(req, res) {
 
 var dbGlobal = null;
 
-MongoClient.connect(CONSTANTS.MongoDbURL, function(err, db) {
+MongoClient.connect(Constants.MongoDbURL, function(err, db) {
 	assert.equal(null, err);
 	dbGlobal = db;
 });
@@ -85,7 +78,7 @@ process.on("SIGINT", function() {
 });
 
 // ------------------------ WebSockets ------------------------ //
-server.listen(CONSTANTS.WebSocketsPort);
+server.listen(Constants.WebsocketPort);
 
 var EVENTS = {
 	SocketIOConnect : 'connect',
@@ -120,11 +113,11 @@ io.on('connection', function(socket) {
 	});
 });
 
-app.get(CONSTANTS.ConnectedClientsURL, function(req, res) {
+app.get(Constants.ConnectedClientsURL, function(req, res) {
 	res.send(clients);	
 });
 
 // ------------------------ Start webserver ------------------------ //
 
-app.listen(CONSTANTS.HttpPort);
+app.listen(Constants.ServerHttpPort);
 console.log("[INFO] Server online");

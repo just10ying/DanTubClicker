@@ -1,5 +1,5 @@
 #dantub-face {
-	margin: 0 auto;
+	margin: 65px auto 0 auto;
 	cursor: pointer;
 }
 
@@ -47,9 +47,40 @@
 	align-items: center;
 }
 
-#messages-container .label.label-clear {
+.message-container {
+	padding: 3px 0;
+	flex: 0 0 auto;
+	min-width: 100%;
+}
+
+.chat-message {
+	flex: 0 0 100%;
+}
+
+.chat-message > .label {
+	display: flex;
+}
+
+.label.username {
+	background-color: #5bc0de;
+	align-items: center;
+}
+
+.chat-message > .chat-content {
+	display: flex;
+	flex: 1 1 0;
+	
+	padding-left: 3px;
+	
+	word-break: break-word;
+}
+
+.messages-container {
+	margin: 5px 0;
+}
+
+.messages-container .label.label-clear {
 	color: #333;
-	padding-left: 0;
 }
 
 .page-header > h1 {
