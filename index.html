@@ -18,6 +18,7 @@
 	<script src="bower_components/angularFacebookUtils/src/facebookUtils.min.js"></script>
 	<script src="user_data_service.js"></script>
 	<script src="index.js"></script>
+	<script src="chat_service.js"></script>
 
 	<div id="main-left" class="col-md-3 main-container flex flex-col static">
 		<div ng-controller="ClickerController" id="clicker-container">
@@ -28,13 +29,13 @@
 		<div ng-controller="ChatController" id="chat-container" class="flex flex-col">
 			<div ng-controller="FacebookController" id="chat-toolbar">
 				<div id="chat-toolbar-buttons" class="btn-group btn-group-xs flex flex-row grow" role="group">
-					<button ng-click="setChatMode(ChatModes.Chat)" ng-class="{'btn-success': connected, 'btn-danger': !connected, 'active': chatMode == ChatModes.chat}" type="button" class="btn btn-default">Chat Status: {{connected ? 'Online' : 'Offline'}}</button>
+					<button ng-click="setChatMode(ChatModes.Chat)" ng-class="{'btn-success': chatService.isConnected(), 'btn-danger': !chatService.isConnected(), 'active': chatMode == ChatModes.chat}" type="button" class="btn btn-default">Chat Status: {{chatService.isConnected() ? 'Online' : 'Offline'}}</button>
 					<button ng-click="setChatMode(ChatModes.ClientInfo)" ng-class="{'active': chatMode == ChatModes.ClientInfo}" type="button" class="btn btn-default">Online Users</button>
 				</div>
 				<facebook-login-button></facebook-login-button>
 			</div>
 			<div ng-show="chatMode == ChatModes.Chat" class="messages-container flex flex-col" scroll-glue>
-				<div ng-repeat="message in messages track by $index" class="message-container flex flex-row">
+				<div ng-repeat="message in chatService.getMessages() track by $index" class="message-container flex flex-row">
 					<div ng-if="message.type == Events.FbConnect">
 						<span class="label label-success">{{message.content}}</span>
 					</div>
@@ -48,7 +49,7 @@
 			</div>
 			<div ng-show="chatMode == ChatModes.ClientInfo" class="messages-container">
 				<div>Users online: {{numConnectedUsers}}</div>
-				<div ng-repeat="alias in connectedUsers track by $index">
+				<div ng-repeat="alias in chatService.getConnectedUsers() track by $index">
 					{{alias}}
 				</div>
 			</div>

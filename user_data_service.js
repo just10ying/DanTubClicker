@@ -26,18 +26,9 @@ angular.module('userDataService', []).service('userData', function($http, $inter
 		}
 	}, Constants.AutoSaveInterval);
 	
-	this.getGgs = function() {
-		return Math.floor(ggs);
-	};
-	
-	this.getGps = function() {
-		return gps;
-	};
-	
-	this.addClickGgs = function() {
-		ggs += ggClickBase * ggClickMultiplier;
-	};
-	
+	this.getGgs = function() { return Math.floor(ggs); };
+	this.getGps = function() { return gps; };
+	this.addClickGgs = function() { ggs += ggClickBase * ggClickMultiplier; };
 	this.loadUserData = function(userID) {
 		_id = userID;
 		$http.post(Constants.UserDataURL, {_id: userID}).

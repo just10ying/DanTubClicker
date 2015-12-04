@@ -17,73 +17,32 @@ app.controller('FacebookController', function($rootScope, userData, facebookConf
 	});
 });
 
-app.controller('ChatController', function($scope, $rootScope, $http, $interval, facebookConfigSettings) {
+app.controller('ChatController', function($scope, $interval, chat) {
 	$scope.Events = Constants.MessageEvents;
-	$scope.messages = [];
+	$scope.chatService = chat;	
 	$scope.localMessageContent = '';
-	$scope.alias = Constants.DefaultAlias;
-	$scope.connected = false;
-	$scope.connectedUsers = [];
-	$scope.numConnectedUsers = 0;
 	$scope.ChatModes = Constants.ChatModes;
 	$scope.chatMode = $scope.ChatModes.Chat;
 	
-	var updateConnectedUserInfo = function() {
-		$http.get(Constants.ConnectedClientsURL).
-		success(function(data, status, headers, config) {
-			$scope.connectedUsers = [];
-			$scope.numConnectedUsers = 0;
-			for (var key in data) {
-				$scope.numConnectedUsers++;
-				if (data[key].alias != null) {
-					$scope.connectedUsers.push(data[key].alias);
-				}
-			}
-		});
-	};
 	var userUpdatePromise = null;
 	$scope.setChatMode = function(mode) {
 		$scope.chatMode = mode;
-		if (mode == $scope.ChatModes.ClientInfo) {
-			updateConnectedUserInfo();
-			userUpdatePromise = $interval(updateConnectedUserInfo, Constants.UserInfoRefreshInterval);
+		if (userUpdatePromise != null) {
+			$interval.cancel(userUpdatePromise);
 		}
-		else {
-			if (userUpdatePromise != null) {
-				$interval.cancel(userUpdatePromise);
-			}
+		if (mode == $scope.ChatModes.ClientInfo) {
+			chat.updateConnectedUserInfo();
+			userUpdatePromise = $interval(chat.updateConnectedUserInfo, Constants.UserInfoRefreshInterval);
 		}
 	};
 	$scope.setChatMode($scope.ChatModes.Chat);
 	
 	$scope.sendChatMessage = function($event) {
 		if ($event == null || $event.charCode == 13) {
-			socket.emit($scope.Events.ChatMessage, {
-				alias: $scope.alias,
-				content: $scope.localMessageContent
-			});
+			chat.sendChatMessage($scope.localMessageContent);
 			$scope.localMessageContent = '';
 		}
 	};
-	
-	var socket = io.connect(':' + Constants.WebsocketPort);	
-	socket.on($scope.Events.SocketIOConnect, function() {
-		$scope.connected = true;
-	});
-	socket.on($scope.Events.ChatMessage, function(data) {
-		$scope.messages.push(data);
-	});
-	
-	$rootScope.$on(facebookConfigSettings.loginSuccess, function(name, response) {
-		FB.api('/me', function(response) {
-			$scope.alias = response.name;
-			socket.emit($scope.Events.FbConnect, response.name);
-		});
-	});
-	
-	$rootScope.$on(facebookConfigSettings.logoutSuccess, function() {
-		$scope.alias = Constants.DefaultAlias;
-	});
 });
 
 app.controller('QuoteController', function($scope, $interval) {
