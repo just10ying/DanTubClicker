@@ -80,33 +80,26 @@ process.on("SIGINT", function() {
 // ------------------------ WebSockets ------------------------ //
 server.listen(Constants.WebsocketPort);
 
-var EVENTS = {
-	SocketIOConnect : 'connect',
-	SocketIODisconnect : 'disconnect',
-	Connect : 'fb_connect',
-	Message : 'chat_message'
-};
-
 var clients = {}; // Hashtable of clients
 
 io.on('connection', function(socket) {
 	clients[socket.id] = {alias: null}; // By default, alias is null.
 
-	socket.on(EVENTS.SocketIODisconnect, function(data) {
+	socket.on(Constants.MessageEvents.SocketIODisconnect, function(data) {
 		delete clients[socket.id];
 	});
 	
-	socket.on(EVENTS.Connect, function(data) {
+	socket.on(Constants.MessageEvents.FbConnect, function(data) {
 		clients[socket.id].alias = data; // Set socket name
 		
-		io.sockets.emit(EVENTS.Message, {
-			type: EVENTS.Connect,
+		io.sockets.emit(Constants.MessageEvents.ChatMessage, {
+			type: Constants.MessageEvents.FbConnect,
 			content: data + ' signed in.'
 		});
 	});
-	socket.on(EVENTS.Message, function(data) {
-		io.sockets.emit(EVENTS.Message, {
-			type: EVENTS.Message,
+	socket.on(Constants.MessageEvents.ChatMessage, function(data) {
+		io.sockets.emit(Constants.MessageEvents.ChatMessage, {
+			type: Constants.MessageEvents.ChatMessage,
 			alias: data.alias,
 			content: data.content
 		});

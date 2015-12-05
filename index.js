@@ -39,8 +39,10 @@ app.controller('ChatController', function($scope, $interval, chat) {
 	
 	$scope.sendChatMessage = function($event) {
 		if ($event == null || $event.charCode == 13) {
-			chat.sendChatMessage($scope.localMessageContent);
-			$scope.localMessageContent = '';
+			if ($scope.localMessageContent.length > 0) {
+				chat.sendChatMessage($scope.localMessageContent);
+				$scope.localMessageContent = '';
+			}
 		}
 	};
 });

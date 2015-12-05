@@ -35,13 +35,25 @@ var Constants = {
 		Chat: 'chat',
 		ClientInfo: 'client_info'
 	},
+	Stickers: {
+		Directory: '/resources/stickers/',
+		Map: {
+			'-_-': '-_-.PNG',
+			'o_o': 'o_o.PNG',
+			':(': 'sad.PNG',
+			'>_>': 'sideways.PNG',
+			':)': 'smile.PNG',
+			':D': 'smileD.PNG'
+		}
+	},
 	
 	// Shared Constants:
 	MessageEvents: {
 		SocketIOConnect: 'connect',
 		SocketIODisconnect: 'disconnect',
 		FbConnect: 'fb_connect',
-		ChatMessage: 'chat_message'
+		ChatMessage: 'chat_message',
+		Sticker: 'smiley'
 	},
 	UserDataURL: '/server/user_data',
 	ConnectedClientsURL: '/server/connected_clients',

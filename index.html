@@ -45,10 +45,14 @@
 							{{message.content}}
 						</div>
 					</div>
+					<div ng-if="message.type == Events.Sticker" class="chat-message flex flex-row">
+						<span class="label username">{{message.alias}}</span>
+						<img ng-src="{{message.content}}" alt="DanTub Sticker">
+					</div>
 				</div>
 			</div>
 			<div ng-show="chatMode == ChatModes.ClientInfo" class="messages-container">
-				<div>Users online: {{numConnectedUsers}}</div>
+				<div>Users online: {{chatService.getNumConnectedUsers()}}</div>
 				<div ng-repeat="alias in chatService.getConnectedUsers() track by $index">
 					{{alias}}
 				</div>
@@ -79,7 +83,7 @@
 				Welcome to DanTub clicker!  Items and upgrades coming soon.
 			</div>
 			<div ng-show="currentTab == tabs.Options">
-				Options
+				<iframe style="display: none" width="560" height="315" src="https://www.youtube.com/embed/rBi6VcYTfPM?autoplay=1" frameborder="0" allowfullscreen></iframe>
 			</div>
 			<div ng-show="currentTab == tabs.Comments">
 				Comments
@@ -87,7 +91,10 @@
 		</div>
 	</div>
 	<div id="main-right" class="col-md-3 main-container">
-		<div>Item and Upgrade Tabs</div>
+		<ul class="nav nav-pills">
+			<li role="presentation" class="active"><a href="#">Items</a></li>
+			<li role="presentation"><a href="#">Upgrades</a></li>
+		</ul>
 		<div>
 			Items
 		</div>
