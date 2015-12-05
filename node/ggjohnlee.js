@@ -28,12 +28,14 @@ app.use(function (req, res, next) {
 	next();
 });
 
+// Retrieve user info
 app.post(Constants.UserDataURL, function(req, res) {
 	assert.notEqual(dbGlobal, null);
 	
-	dbGlobal.collection(Constants.MongoUserDataCollection).findOne({'_id' : '' + req.body._id}, function(err, result) {
+	var authInfo = req.body.authInfo;
+	dbGlobal.collection(Constants.MongoUserDataCollection).findOne({'_id' : authInfo.userID}, function(err, result) {
 		if (result) {
-			res.send(JSON.stringify(result));
+			res.send(result);
 		}
 	});	
 	
@@ -41,18 +43,22 @@ app.post(Constants.UserDataURL, function(req, res) {
 
 app.put(Constants.UserDataURL, function(req, res) {
 	assert.notEqual(dbGlobal, null);
-		
-	var cursor = dbGlobal.collection(Constants.MongoUserDataCollection).find({'_id' : req.body._id});
+	
+	var authInfo = req.body.authInfo;
+	var putData = req.body.data;
+	putData._id = authInfo.userID;
+	
+	var cursor = dbGlobal.collection(Constants.MongoUserDataCollection).find({'_id' : authInfo.userID});
 	cursor.count(false, function(err, count) {
 		if (count == 0) {
-			dbGlobal.collection(Constants.MongoUserDataCollection).insertOne(req.body,
+			dbGlobal.collection(Constants.MongoUserDataCollection).insertOne(putData,
 				function(err, results) {
 					assert.equal(err, null);
 			});
 		}
 		else {
-			dbGlobal.collection(Constants.MongoUserDataCollection).replaceOne({'_id' : req.body._id},
-				req.body,
+			dbGlobal.collection(Constants.MongoUserDataCollection).replaceOne({'_id' : authInfo.userID},
+				putData,
 				function(err, results) {
 					assert.equal(err, null);
 				});

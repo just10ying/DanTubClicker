@@ -13,7 +13,7 @@ app.controller('ClickerController', function($scope, userData) {
 
 app.controller('FacebookController', function($rootScope, userData, facebookConfigSettings) {
 	$rootScope.$on(facebookConfigSettings.loginSuccess, function(name, response) {
-		userData.loadUserData(response.authResponse.userID);
+		userData.loadUserData(response.authResponse);
 	});
 });
 
